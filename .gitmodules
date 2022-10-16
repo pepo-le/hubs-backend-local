@@ -1,0 +1,6 @@
+[submodule "reticulum"]
+	path = reticulum
+	url = https://github.com/mozilla/reticulum
+[submodule "dialog"]
+	path = dialog
+	url = https://github.com/mozilla/dialog

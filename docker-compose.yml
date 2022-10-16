@@ -1,0 +1,51 @@
+version: '3'
+services:
+  ret:
+    build:
+      context: ./reticulum
+      dockerfile: Dockerfile
+    env_file:
+      - ./env/reticulum.env
+    volumes:
+      - ./reticulum:/ret
+      - ./tmp/storage/dev:/storage/dev
+      - ./code/reticulum/lib/ret/http_utils.ex:/ret/lib/ret/http_utils.ex
+    tty: true
+    ports:
+      - "4000:4000"
+    command: >
+      bash -c "mix local.hex --force && mix deps.get && mix ecto.create && iex -S mix phx.server"
+    depends_on:
+      - db
+  dialog:
+    build:
+      context: ./dialog
+      dockerfile: Dockerfile
+    environment:
+      - "HTTPS_CERT_FULLCHAIN=/app/certs/server.pem"
+      - "HTTPS_CERT_PRIVKEY=/app/certs/server.key"
+      - "AUTH_KEY=/app/certs/pub.key"
+    tty: true
+    volumes:
+      - ./certs:/app/certs
+    ports:
+      - "4443:4443"
+  db:
+    image: postgres:11
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+        - ./tmp/db:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+  postgrest:
+    image: postgrest/postgrest
+    env_file:
+      - ./env/postgrest.env
+    volumes:
+      - ./reticulum:/ret
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
